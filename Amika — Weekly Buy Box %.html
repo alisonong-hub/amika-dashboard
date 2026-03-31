@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amika — Weekly Buy Box %</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #14171f;
+      --border: #1e2330;
+      --accent: #6ee7b7;
+      --ext: #f59e0b;
+      --int: #a78bfa;
+      --text: #e2e8f0;
+      --muted: #64748b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      font-family: 'Syne', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 44px;
+      width: 100%;
+      max-width: 1080px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -80px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(110,231,183,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+    }
+    .brand-label {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .chart-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .chart-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 5px;
+      font-weight: 400;
+    }
+    .avg-badge { text-align: right; }
+    .avg-label {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .avg-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 420px;
+    }
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .legend-group {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .legend-group-label {
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      min-width: 110px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legend-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .legend-ring {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2.5px solid var(--ext);
+      background: transparent;
+    }
+    .legend-diamond {
+      width: 11px;
+      height: 11px;
+      background: var(--int);
+      transform: rotate(45deg);
+    }
+    .legend-text {
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+    }
+    .legend-text strong { color: var(--text); font-weight: 500; }
+    .legend-divider {
+      width: 1px;
+      height: 14px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div>
+        <div class="brand-label">Amika · All Marketplaces</div>
+        <div class="chart-title">Weekly Buy Box %</div>
+        <div class="chart-subtitle">Oct 2025 – Mar 2026 &nbsp;·&nbsp; External (US) and In-Market (AU) events annotated</div>
+      </div>
+      <div class="avg-badge">
+        <div class="avg-label">6-mo avg</div>
+        <div class="avg-value">87.08%</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <canvas id="bbChart"></canvas>
+    </div>
+
+    <div class="legend">
+      <div class="legend-group">
+        <span class="legend-group-label" style="color: #f59e0b;">⊙ External (US)</span>
+        <div class="legend-item">
+          <div class="legend-icon"><div class="legend-ring"></div></div>
+          <div class="legend-text"><strong>Oct PBDD</strong> &nbsp;7–8 Oct</div>
+        </div>
+        <div class="legend-divider"></div>
+        <div class="legend-item">
+          <div class="legend-icon"><div class="legend-ring"></div></div>
+          <div class="legend-text"><strong>BFCM</strong> &nbsp;28 Nov–1 Dec</div>
+        </div>
+        <div class="legend-divider"></div>
+        <div class="legend-item">
+          <div class="legend-icon"><div class="legend-ring"></div></div>
+          <div class="legend-text"><strong>Spring Sale</strong> &nbsp;25–31 Mar</div>
+        </div>
+      </div>
+      <div class="legend-group">
+        <span class="legend-group-label" style="color: #a78bfa;">◆ In-Market (AU)</span>
+        <div class="legend-item">
+          <div class="legend-icon"><div class="legend-diamond"></div></div>
+          <div class="legend-text"><strong>Oct Prime</strong> &nbsp;7–13 Oct</div>
+        </div>
+        <div class="legend-divider"></div>
+        <div class="legend-item">
+          <div class="legend-icon"><div class="legend-diamond"></div></div>
+          <div class="legend-text"><strong>BFCM AU</strong> &nbsp;18 Nov–1 Dec</div>
+        </div>
+        <div class="legend-divider"></div>
+        <div class="legend-item">
+          <div class="legend-icon"><div class="legend-diamond"></div></div>
+          <div class="legend-text"><strong>Big Smile</strong> &nbsp;16–22 Mar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const labels = [
+      '30 Sep','5 Oct','12 Oct','19 Oct','26 Oct',
+      '2 Nov','9 Nov','16 Nov','23 Nov','30 Nov',
+      '7 Dec','14 Dec','21 Dec','28 Dec',
+      '4 Jan','11 Jan','18 Jan','25 Jan',
+      '1 Feb','8 Feb','15 Feb','22 Feb',
+      '1 Mar','8 Mar','15 Mar','22 Mar'
+    ];
+
+    const values = [
+      73.81, 85.87, 94.95, 92.69, 90.55,
+      94.60, 90.65, 85.96, 84.81, 92.48,
+      89.98, 78.50, 75.97, 89.15,
+      86.16, 87.29, 77.64, 85.74,
+      81.32, 85.73, 86.99, 93.58,
+      95.37, 89.01, 94.29, 79.81
+    ];
+
+    const EXT_COLOR = '#f59e0b';
+    const INT_COLOR = '#a78bfa';
+
+    // External events (Amazon US) — amber rings, labels ABOVE
+    const externalEvents = [
+      { index: 1,  name: 'Oct PBDD'    },
+      { index: 9,  name: 'BFCM (US)'   },
+      { index: 25, name: 'Spring Sale'  },
+    ];
+
+    // Internal events (Amazon AU) — purple diamonds, labels BELOW
+    // BFCM AU now shares index 9 with BFCM US
+    const internalEvents = [
+      { index: 1,  name: 'Oct Prime'  },
+      { index: 9,  name: 'BFCM (AU)'  },
+      { index: 24, name: 'Big Smile'  },
+    ];
+
+    function drawPill(ctx, text, cx, anchorY, color, pos, chartArea) {
+      ctx.save();
+      ctx.font = '500 10.5px "DM Mono", monospace';
+      const tw = ctx.measureText(text).width;
+      const ph = 20, padX = 10;
+      const pw = tw + padX * 2;
+      const gap = 24;
+      let pillY = pos === 'above' ? anchorY - gap - ph : anchorY + gap;
+      let pillX = cx - pw / 2;
+      if (pillX < chartArea.left + 2) pillX = chartArea.left + 2;
+      if (pillX + pw > chartArea.right - 2) pillX = chartArea.right - pw - 2;
+
+      ctx.beginPath();
+      ctx.roundRect(pillX, pillY, pw, ph, 4);
+      ctx.fillStyle = 'rgba(13,15,20,0.92)';
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.1;
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, pillX + padX, pillY + ph / 2);
+      ctx.restore();
+    }
+
+    function drawDash(ctx, cx, fromY, toY, color) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([4, 5]);
+      ctx.moveTo(cx, fromY);
+      ctx.lineTo(cx, toY);
+      ctx.strokeStyle = color + 'aa';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    const eventPlugin = {
+      id: 'eventPlugin',
+      afterDatasetsDraw(chart) {
+        const { ctx, scales: { x, y }, chartArea } = chart;
+        const meta = chart.getDatasetMeta(0);
+        const yFloor = y.getPixelForValue(y.min);
+
+        // External: amber rings + labels above
+        externalEvents.forEach(ev => {
+          const pt = meta.data[ev.index];
+          if (!pt) return;
+          const cx = pt.x, cy = pt.y;
+          drawDash(ctx, cx, cy - 14, yFloor, EXT_COLOR);
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+          ctx.strokeStyle = EXT_COLOR;
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          ctx.restore();
+          drawPill(ctx, ev.name, cx, cy, EXT_COLOR, 'above', chartArea);
+        });
+
+        // Internal: purple diamonds + labels below
+        internalEvents.forEach(ev => {
+          const pt = meta.data[ev.index];
+          if (!pt) return;
+          const cx = pt.x, cy = pt.y;
+          const hasOverlap = externalEvents.some(e => e.index === ev.index);
+          const size = 9;
+          const lineStart = hasOverlap ? cy + size + 2 : cy + size;
+          drawDash(ctx, cx, lineStart, yFloor, INT_COLOR);
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(cx,        cy - size);
+          ctx.lineTo(cx + size, cy);
+          ctx.lineTo(cx,        cy + size);
+          ctx.lineTo(cx - size, cy);
+          ctx.closePath();
+          ctx.fillStyle = INT_COLOR;
+          ctx.fill();
+          ctx.strokeStyle = '#0d0f14';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.restore();
+          drawPill(ctx, ev.name, cx, cy, INT_COLOR, 'below', chartArea);
+        });
+      }
+    };
+
+    const canvas = document.getElementById('bbChart');
+    const ctx2d = canvas.getContext('2d');
+
+    const gradient = ctx2d.createLinearGradient(0, 0, 0, 420);
+    gradient.addColorStop(0, 'rgba(110,231,183,0.16)');
+    gradient.addColorStop(1, 'rgba(110,231,183,0.00)');
+
+    new Chart(ctx2d, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Buy Box %',
+          data: values,
+          borderColor: '#6ee7b7',
+          borderWidth: 2.5,
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3.5,
+          pointBackgroundColor: '#6ee7b7',
+          pointBorderColor: '#0d0f14',
+          pointBorderWidth: 1.5,
+          pointHoverRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        layout: { padding: { top: 55, bottom: 10 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e2330',
+            borderColor: '#2d3448',
+            borderWidth: 1,
+            titleColor: '#e2e8f0',
+            bodyColor: '#94a3b8',
+            titleFont: { family: 'Syne', size: 13, weight: '600' },
+            bodyFont: { family: 'DM Mono', size: 12 },
+            padding: 12,
+            callbacks: {
+              label: ctx => ` Buy Box: ${ctx.parsed.y.toFixed(2)}%`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
+            border: { color: '#1e2330' },
+            ticks: {
+              color: '#475569',
+              font: { family: 'DM Mono', size: 10 },
+              maxRotation: 40,
+              minRotation: 30,
+              maxTicksLimit: 14,
+            }
+          },
+          y: {
+            min: 60,
+            max: 100,
+            grid: { color: 'rgba(255,255,255,0.05)', drawTicks: false },
+            border: { color: '#1e2330' },
+            ticks: {
+              color: '#475569',
+              font: { family: 'DM Mono', size: 10 },
+              callback: v => v + '%',
+              stepSize: 10,
+            }
+          }
+        }
+      },
+      plugins: [eventPlugin]
+    });
+  </script>
+</body>
+</html>
